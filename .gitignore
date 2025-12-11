@@ -1,0 +1,20 @@
+# Python gereksizleri
+__pycache__/
+*.pyc
+.env
+.venv
+venv/
+.vscode/
+.idea/
+
+# Büyük Dosyalar (GitHub'a gitmemeli)
+datasets/
+training/logs/
+models/*.pt
+models/*.onnx
+models/*.engine
+models/*.cache
+logs_system/
+
+# Diğerleri
+*.mp4

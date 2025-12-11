@@ -1,0 +1,11 @@
+datasets/
+training/logs/
+models/*.pt
+models/*.onnx
+models/*.engine
+__pycache__/
+.git/
+.gitignore
+README.md
+report.pdf
+tests/

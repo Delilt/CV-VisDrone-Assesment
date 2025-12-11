@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataguess AI Vision Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        header { width: 100%; padding: 20px 0; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid #334155; text-align: center; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+        h1 { margin: 0; font-weight: 600; background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .container { max-width: 1000px; width: 90%; margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .card { background-color: var(--card); padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        
+        .upload-area { border: 2px dashed #475569; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .upload-area:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+        .btn { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 20px; width: 100%; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        #preview { width: 100%; border-radius: 8px; margin-top: 20px; display: none; border: 1px solid #475569; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 0.85rem; color: #94a3b8; }
+        
+        /* SCROLLBAR GÜZELLEŞTİRME */
+        ul { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; padding-right: 5px; }
+        ul::-webkit-scrollbar { width: 6px; }
+        ul::-webkit-scrollbar-track { background: #0f172a; border-radius: 3px; }
+        ul::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ul::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        li { padding: 10px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; font-size: 0.9rem; }
+        li:last-child { border-bottom: none; }
+        
+        .badge { background: #334155; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+        
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Dataguess AI Vision Hub</h1>
+    <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 0.9rem;">Real-Time Edge Analytics Interface</p>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h3 style="margin-top: 0;">Görüntü Analizi</h3>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p style="font-size: 2rem; margin: 0;">📷</p>
+            <p>Resim seçmek için tıklayın veya sürükleyin</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none" onchange="previewImage(event)">
+        </div>
+        <img id="preview" alt="Preview">
+        <button class="btn" onclick="analyzeImage()">Analiz Et ⚡</button>
+    </div>
+
+    <div class="card" id="resultsArea" style="opacity: 0.5; pointer-events: none;">
+        <h3 style="margin-top: 0;">Analiz Sonuçları</h3>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value" id="objCount">-</div>
+                <div class="stat-label">Tespit Edilen</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="latency">-</div>
+                <div class="stat-label">Süre (ms)</div>
+            </div>
+        </div>
+
+        <canvas id="chartCanvas" style="max-height: 200px; margin-bottom: 20px;"></canvas>
+
+        <h4 style="margin-bottom: 10px; color: #94a3b8;">Detaylı Döküm</h4>
+        <ul id="detailsList">
+            <li style="text-align: center; color: #64748b;">Henüz analiz yapılmadı...</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    const CLASS_NAMES = {
+        0: "Yaya (Pedestrian)", 1: "İnsan (People)", 2: "Bisiklet", 3: "Araba (Car)",
+        4: "Minibüs (Van)", 5: "Kamyon (Truck)", 6: "Tricycle", 7: "Awning-tri",
+        8: "Otobüs (Bus)", 9: "Motosiklet"
+    };
+
+    let selectedFile = null;
+    let myChart = null;
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('preview');
+                img.src = e.target.result;
+                img.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function analyzeImage() {
+        if (!selectedFile) { alert("Lütfen önce bir resim seçin!"); return; }
+
+        const resArea = document.getElementById('resultsArea');
+        // --- DÜZELTME BURADA ---
+        resArea.style.opacity = "1";
+        resArea.style.pointerEvents = "auto"; // ARTIK TIKLANABİLİR!
+        
+        document.getElementById('detailsList').innerHTML = '<li style="justify-content:center;">Analiz ediliyor... ⏳</li>';
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+            const response = await fetch("/detect", { method: "POST", body: formData });
+            
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detail || "Sunucu Hatası");
+            }
+            
+            const data = await response.json();
+
+            document.getElementById('latency').innerText = data.inference_time_ms.toFixed(1);
+            document.getElementById('objCount').innerText = data.object_count;
+
+            const list = document.getElementById('detailsList');
+            list.innerHTML = "";
+            
+            const counts = {};
+
+            data.predictions.forEach(pred => {
+                const name = CLASS_NAMES[pred.class_id] || "Bilinmeyen";
+                const conf = Math.round(pred.confidence * 100);
+                
+                counts[name] = (counts[name] || 0) + 1;
+
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${name}</span>
+                    <span class="badge" style="background:${conf > 70 ? '#10b981' : '#f59e0b'}">${conf}% Güven</span>
+                `;
+                list.appendChild(li);
+            });
+
+            if (data.predictions.length === 0) {
+                list.innerHTML = '<li style="justify-content:center;">Nesne bulunamadı.</li>';
+            }
+
+            drawChart(counts);
+
+        } catch (error) {
+            console.error(error);
+            alert("Hata: " + error.message);
+            document.getElementById('detailsList').innerHTML = '<li style="text-align:center; color:#ef4444;">Hata oluştu.</li>';
+        }
+    }
+
+    function drawChart(counts) {
+        const ctx = document.getElementById('chartCanvas').getContext('2d');
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    label: 'Nesne Sayısı',
+                    data: Object.values(counts),
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1,
+                    hoverBackgroundColor: '#3b82f6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        // --- DÜZELTME BURADA ---
+                        enabled: true,
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#f1f5f9',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Sayı: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#334155' },
+                        ticks: { color: '#94a3b8', stepSize: 1 } 
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
