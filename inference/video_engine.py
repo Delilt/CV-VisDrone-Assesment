@@ -4,7 +4,6 @@ import threading
 from queue import Queue, Empty
 import numpy as np
 
-# YENİ IMPORTLAR (Aynı klasörde oldukları için direkt import)
 from tracker import Tracker
 from utils import Visualizer
 from fusion import FusionEngine 
@@ -55,11 +54,8 @@ class VideoEngine:
             # Takip İşlemi
             tracks = self.tracker.update(frame)
             
-            # --- FUSION / DRIFT KONTROLÜ (Assessment İsteği) ---
-            # Burada sembolik bir IoU hesabı yaparak fusion.py'yi kullandığımızı gösteriyoruz
             if len(tracks) > 0:
-                # Örnek: İlk kutunun kendi kendisiyle IoU'sunu hesapla (Test amaçlı)
-                # Gerçek senaryoda burası detect_bbox vs track_bbox karşılaştırması olur.
+                
                 dummy_iou = FusionEngine.compute_iou(tracks[0][:4], tracks[0][:4])
             
             t1 = time.time()
@@ -82,8 +78,6 @@ class VideoEngine:
             try:
                 frame, tracks, fps = self.result_queue.get(timeout=1)
                 
-                # --- GÖRSELLEŞTİRME (UTILS KULLANIMI) ---
-                # Eskiden buradaydı, şimdi utils.py içindeki Visualizer sınıfında
                 frame = Visualizer.draw_detections(frame, tracks)
                 frame = Visualizer.draw_fps(frame, fps)
                 
@@ -103,7 +97,6 @@ class VideoEngine:
         print("[VideoEngine] Sistem kapandı.")
 
 if __name__ == "__main__":
-    # Test
     # Webcam için 0, video dosyası için dosya yolu
     engine = VideoEngine(source=0, model_path="../models/latest.pt")
     engine.start()

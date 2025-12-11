@@ -4,7 +4,6 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 from ultralytics import YOLO
 
-# --- AYARLAR ---
 DATA_CONF = "VisDrone.yaml" 
 MODEL_NAME = "yolov8n.pt"   
 EPOCHS = 10                 
@@ -29,17 +28,16 @@ def train_model():
         
         # --- Donanım Optimizasyonu ---
         device=0,           
-        workers=0,          # <--- KRİTİK DEĞİŞİKLİK: Windows'ta hata almamak için 0 yaptık.
+        workers=0,          # <--- KRİTİK DEĞİŞİKLİK: Windows'ta hata almamak için 0 yaptım. Bigisayarınıza göre artırabilirsiniz.Benim önerim 2-4 arası.Sistemimde bazi sorunlar var bu sebeple ben 0 yaptim.
+        
         cache=False,        
         amp=True,           
         
-        # --- Optimizasyon ---
         optimizer='AdamW',
         lr0=0.001,
         cos_lr=True,
         warmup_epochs=3.0,
         
-        # --- Augmentation ---
         mosaic=1.0,               
         mixup=0.1,                
         degrees=5.0,

@@ -14,12 +14,10 @@ def run_benchmark():
     
     latencies = []
     
-    # 1. Warmup (Isınma - İstek: >= 10 iterations)
     print("Isınma turları (Warmup)...")
     for _ in range(15):
         model.predict(img, verbose=False)
         
-    # 2. Test (100 döngü)
     print("Ölçüm yapılıyor...")
     start_time = time.time()
     for _ in range(100):
@@ -43,7 +41,6 @@ def run_benchmark():
     
     print(json.dumps(results, indent=2))
     
-    # JSON Kaydet
     with open("benchmark_results.json", "w") as f:
         json.dump(results, f, indent=4)
     print("Sonuçlar 'benchmark_results.json' dosyasına kaydedildi.")

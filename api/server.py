@@ -15,44 +15,37 @@ from monitoring.gpu_monitor import GPUMonitor
 fps_meter = FPSMeter()
 gpu_monitor = GPUMonitor()
 
-# Üst dizindeki modülleri görebilmek için path ayarı
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from inference.detector import Detector
 
-# --- AYARLAR ---
 app = FastAPI(
     title="Dataguess AI Assessment API",
     description="YOLOv8 Object Detection & Tracking API",
     version="1.0.0"
 )
 
-# Global Model Değişkeni
 detector = None
 
 @app.on_event("startup")
 def load_model():
     """Sunucu başlarken modeli belleğe yükle"""
     global detector
-    model_path = "models/latest.pt"  # Önce .pt ile başlayalım, garanti olsun
+    model_path = "models/latest.pt"
     
-    # Eğer ONNX varsa onu tercih et (Daha hızlı)
     if os.path.exists("models/latest.onnx"):
         model_path = "models/latest.onnx"
         print("ONNX model bulundu, aktif ediliyor.")
 
     try:
-        # Detector sınıfını çağır
         detector = Detector(model_path=model_path, conf_thres=0.25)
         print(f"Model başarıyla yüklendi: {model_path}")
     except Exception as e:
-        print(f"KRİTİK HATA: Model yüklenemedi! {e}")
+        print(f" HATA: Model yüklenemedi! {e}")
 
-# --- YENİ EKLENECEK KISIM (HTML Frontend) ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Web Arayüzünü Yükle"""
-    # Dosya yolunu bul
     html_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
     with open(html_path, "r", encoding="utf-8") as f:
         return f.read()
@@ -103,7 +96,7 @@ async def detect_objects(file: UploadFile = File(...)):
             "confidence": float(det[4]),
             "class_id": int(det[5])
         })
-    # Her tahmini kayıt altına alıyoruz
+    # Tahminleri Loglama
     SystemLogger.log_inference(inference_time=latency, obj_count=len(results))
     
     return {
@@ -111,6 +104,3 @@ async def detect_objects(file: UploadFile = File(...)):
         "object_count": len(results),
         "predictions": results
     }
-
-# Çalıştırmak için:
-# uvicorn api.server:app --reload

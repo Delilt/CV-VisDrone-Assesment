@@ -1,6 +1,5 @@
 # GIRIS CIKIS VERI MODELLERI
 
-
 from pydantic import BaseModel
 from typing import List
 

@@ -5,12 +5,10 @@ import os
 import numpy as np
 import pytest
 
-# Ana dizini path'e ekle ki modülleri bulabilsin
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from inference.detector import Detector
 
-# Testte kullanılacak model
 MODEL_PATH = "models/latest.onnx" 
 
 def test_model_loading():

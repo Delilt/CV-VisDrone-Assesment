@@ -20,16 +20,12 @@ class Detector:
         
         print(f"[Detector] Yükleniyor: {model_path} | Cihaz: {self.device}")
         
-        # Ultralytics Wrapper
-        # Bu yapı .pt, .onnx ve .engine dosyalarını otomatik tanır.
         try:
             self.model = YOLO(model_path)
         except Exception as e:
             print(f"[Detector] HATA: Model yüklenemedi! {e}")
             raise e
 
-        # Isınma Turu (Warm-up)
-        # Modelin hafızaya yerleşmesi için boş bir veriyle çalıştırıyoruz.
         self._warmup()
 
     def _warmup(self):
@@ -60,7 +56,6 @@ class Detector:
 
         detections = []
         
-        # Sonuçları ayrıştır
         for result in results:
             boxes = result.boxes.cpu().numpy()
             for box in boxes:
@@ -68,24 +63,19 @@ class Detector:
                 conf = box.conf[0]
                 cls_id = int(box.cls[0])
                 
-                # Format: [x1, y1, x2, y2, score, class_id]
                 detections.append([r[0], r[1], r[2], r[3], conf, cls_id])
 
         return detections, inference_time
 
 if __name__ == "__main__":
-    # BASİT TEST
     # Bu dosya doğrudan çalıştırılırsa test yapar.
     
-    # 1. Modeli Seç (PyTorch veya ONNX ile test et)
-    model_path = "../models/latest.onnx" # ONNX modelini test edelim
+    model_path = "../models/latest.onnx"
     
     detector = Detector(model_path=model_path)
     
-    # 2. Rastgele bir resim oluştur (Simülasyon)
     img = np.random.randint(0, 255, (640, 640, 3), dtype=np.uint8)
     
-    # 3. Tespit Yap
     dets, dt = detector.detect(img)
     
     print(f"Test Sonucu: {len(dets)} nesne bulundu.")

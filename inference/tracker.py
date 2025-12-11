@@ -36,7 +36,6 @@ class Tracker:
 
             for box, track_id, conf, cls in zip(boxes, track_ids, confs, clss):
                 x1, y1, x2, y2 = box.astype(int)
-                # Format: [x1, y1, x2, y2, track_id, score, class_id]
                 tracks.append([x1, y1, x2, y2, int(track_id), conf, int(cls)])
         
         return tracks

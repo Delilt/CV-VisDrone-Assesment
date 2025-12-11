@@ -3,11 +3,9 @@
 from ultralytics import YOLO
 import os
 
-# Yollar
 MODEL_PATH = "../models/latest.pt" 
 
 def build_engine():
-    # Model Yükle
     if not os.path.exists(MODEL_PATH):
         print("Eğitilmiş model bulunamadı, standart yolov8n kullanılıyor.")
         model = YOLO("yolov8n.pt")
@@ -15,15 +13,15 @@ def build_engine():
         model = YOLO(MODEL_PATH)
 
     # 1. FP16 (Half Precision) Engine Üretimi
-    # Assessment İsteği: "Generate FP16 TensorRT engine"
+
     print("\n--- FP16 TensorRT Engine Oluşturuluyor ---")
     try:
         model.export(
             format="engine",  # TensorRT formatı
-            device=0,         # GPU kullanımı şart
+            device=0,
             half=True,        # FP16 modu (Hızlandırır)
-            dynamic=True,     # Dinamik boyut desteği
-            workspace=4,      # Workspace size (GB cinsinden, VRAM'e göre ayarla)
+            dynamic=True,
+            workspace=4,
             simplify=True
         )
         print("FP16 Engine tamamlandı.")
@@ -31,14 +29,14 @@ def build_engine():
         print(f"FP16 Export Hatası (TensorRT kurulu mu?): {e}")
 
     # 2. INT8 Engine Üretimi
-    # Assessment İsteği: "Generate INT8 TensorRT engine"
+   
     print("\n--- INT8 TensorRT Engine Oluşturuluyor ---")
     try:
         model.export(
             format="engine",
             device=0,
             int8=True,        # INT8 modu (En hızlısı ama kalibrasyon gerekir)
-            data="../datasets/hard_hat_workers/data.yaml", # Kalibrasyon için veri seti gerekli!
+            data="../datasets/hard_hat_workers/data.yaml", # 
             dynamic=True,
             simplify=True
         )

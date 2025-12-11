@@ -5,7 +5,6 @@ import json
 import os
 from datetime import datetime
 
-# Log Klasörü
 LOG_DIR = "logs_system"
 os.makedirs(LOG_DIR, exist_ok=True)
 

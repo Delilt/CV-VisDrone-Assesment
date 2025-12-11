@@ -1,6 +1,6 @@
 # GPU YUKU VE BELLEK YUKU
 
-import pynvml
+import pynvml #Bilgisayarda calismayabilir bunun icin try-except yapilabilir
 import time
 
 class GPUMonitor:
